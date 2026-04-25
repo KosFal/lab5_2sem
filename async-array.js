@@ -20,16 +20,46 @@ function asyncMap(array, asyncTask, cb) {
   });
 }
 
-function doubleAsync(num, cb) {
-  setTimeout(function() {
-    cb(null, num * 2);
-  }, 100);
+function asyncMapPromise(array, asyncTask) {
+  return new Promise(function(resolve, reject) {
+    var results = [];
+    var completed = 0;
+
+    if (array.length === 0) {
+      return resolve([]);
+    }
+
+    array.forEach(function(item, index) {
+      asyncTask(item)
+        .then(function(value) {
+          results[index] = value;
+          completed = completed + 1;
+          if (completed === array.length) {
+            resolve(results);
+          }
+        })
+        .catch(function(err) {
+          reject(err);
+        });
+    });
+  });
 }
 
-asyncMap([1, 2, 3], doubleAsync, function(err, result) {
-  if (err) {
+function doublePromise(num) {
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      resolve(num * 2);
+    }, 100);
+  });
+}
+
+async function runExample() {
+  try {
+    var result = await asyncMapPromise([1, 2, 3], doublePromise);
+    console.log(result); 
+  } catch (err) {
     console.error("помилка:", err);
-  } else {
-    console.log(result);
   }
-});
+}
+
+runExample();
